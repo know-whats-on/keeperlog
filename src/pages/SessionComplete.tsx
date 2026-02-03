@@ -4,7 +4,6 @@ import { db } from '../db';
 import { CompetencySelector } from '../components/CompetencySelector';
 import { ChevronLeft, CheckCircle2, Clock, Sparkles, UserCheck } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
-import { cn } from '../lib/utils';
 import { differenceInMinutes } from 'date-fns';
 import { AutoSaveIndicator } from '../components/AutoSaveIndicator';
 
@@ -76,7 +75,7 @@ export function SessionComplete() {
     const timer = setTimeout(async () => {
       setSaveStatus('saving');
       try {
-        const reflectionText = activePrompts.map(p => `**${p}**\n${answers[p] || '-'}`).join('\n\n');
+        const reflectionText = activePrompts.map(p => `**${p}**\\n${answers[p] || '-'}`).join('\\n\\n');
         
         await db.sessions.update(sessionId, {
           durationMinutes: duration,
@@ -103,7 +102,7 @@ export function SessionComplete() {
     setLoading(true);
     try {
       // Ensure final save happens
-      const reflectionText = activePrompts.map(p => `**${p}**\n${answers[p] || '-'}`).join('\n\n');
+      const reflectionText = activePrompts.map(p => `**${p}**\\n${answers[p] || '-'}`).join('\\n\\n');
 
       await db.sessions.update(sessionId, {
         endTime: new Date(), 
@@ -128,8 +127,8 @@ export function SessionComplete() {
   };
 
   return (
-    <div className="pb-20">
-      <div className="flex items-center justify-between mb-6">
+    <div className="flex flex-col h-full">
+      <div className="flex items-center justify-between mb-6 flex-shrink-0">
         <div className="flex items-center gap-2">
           <button onClick={() => navigate(-1)} className="p-3 -ml-3 text-stone-400 hover:text-stone-100 rounded-full hover:bg-stone-800 transition-colors">
             <ChevronLeft className="h-6 w-6" />
@@ -139,7 +138,8 @@ export function SessionComplete() {
         <AutoSaveIndicator status={saveStatus} lastSaved={lastSaved} />
       </div>
 
-      <div className="space-y-8">
+      <div className="flex-1 overflow-y-auto pb-4">
+        <div className="space-y-8">
         
         {/* Hours Logging */}
         <section className="space-y-4">
@@ -229,19 +229,19 @@ export function SessionComplete() {
              </p>
            </div>
         </section>
-
-        {/* Submit */}
-        <div className="sticky bottom-4 pt-4">
-          <button 
-            onClick={handleFinish}
-            disabled={loading}
-            className="w-full bg-emerald-600 text-white font-bold py-4 rounded-xl shadow-xl shadow-emerald-900/30 hover:bg-emerald-500 transition-colors flex items-center justify-center gap-2"
-          >
-            <CheckCircle2 className="h-5 w-5" />
-            {loading ? 'Finalizing...' : 'Complete Day & Save'}
-          </button>
         </div>
+      </div>
 
+      {/* Fixed Bottom Button */}
+      <div className="flex-shrink-0 pt-6 pb-2 bg-stone-950">
+        <button 
+          onClick={handleFinish}
+          disabled={loading}
+          className="w-full bg-emerald-600 text-white font-bold py-4 rounded-xl shadow-xl shadow-emerald-900/30 hover:bg-emerald-500 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <CheckCircle2 className="h-5 w-5" />
+          {loading ? 'Finalizing...' : 'Complete Day & Save'}
+        </button>
       </div>
     </div>
   );

@@ -20,7 +20,7 @@ export function LogHistory() {
   }) || [];
 
   return (
-    <div className="space-y-4 pb-20">
+    <div className="flex flex-col h-full overflow-y-auto space-y-4 pb-24">
       <h1 className="text-xl font-bold text-stone-100">Placement History</h1>
       
       <div className="sticky top-0 bg-stone-950 pt-2 pb-4 z-10 border-b border-stone-900/0">

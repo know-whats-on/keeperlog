@@ -4,6 +4,7 @@ import { db, Session } from '../db';
 import { Plus, Play, FileText, Camera, Mic, ChevronRight, Clock, MapPin, Download, AlertCircle } from 'lucide-react';
 import { Link, useNavigate } from 'react-router';
 import { startOfWeek, differenceInDays } from 'date-fns';
+import profileImage from 'figma:asset/b206651a4067f57050f8e5709556b1718b1b3360.png';
 
 export function Dashboard() {
   const navigate = useNavigate();
@@ -65,9 +66,16 @@ export function Dashboard() {
           <p className="text-emerald-500 text-[10px] font-bold uppercase tracking-widest mb-1">KeeperLog</p>
           <h1 className="text-2xl font-bold text-white">Good {timeOfDay}, {profile.name?.split(' ')[0] || 'Keeper'}.</h1>
         </div>
-        <div className="h-10 w-10 bg-stone-800 rounded-full flex items-center justify-center border border-stone-700">
-          <span className="text-sm font-bold text-stone-400">{profile.name?.[0] || 'K'}</span>
-        </div>
+        <button 
+          onClick={() => navigate('/settings')}
+          className="h-10 w-10 rounded-full border-2 border-stone-700 overflow-hidden hover:border-emerald-500 transition-colors active:scale-95"
+        >
+          <img 
+            src={profileImage} 
+            alt="Profile" 
+            className="w-full h-full object-cover"
+          />
+        </button>
       </div>
 
       {/* Export Reminder */}
@@ -171,22 +179,27 @@ export function Dashboard() {
         </div>
         
         <div className="space-y-3">
-           {recentSessions?.map(session => (
-             <Link key={session.id} to={`/session/${session.id}`} className="block bg-stone-900 border border-stone-800 p-4 rounded-xl hover:border-emerald-500/30 transition-colors">
-               <div className="flex justify-between items-start mb-2">
-                 <div>
-                   <h3 className="font-bold text-stone-200">{session.facility}</h3>
-                   <p className="text-xs text-stone-500">{new Date(session.date).toLocaleDateString(undefined, {weekday: 'long', month: 'short', day: 'numeric'})}</p>
+           {recentSessions?.map(session => {
+             // Get the first reflection answer to display
+             const firstAnswer = session.reflectionPrompts ? Object.values(session.reflectionPrompts)[0] : '';
+             
+             return (
+               <Link key={session.id} to={`/session/${session.id}`} className="block bg-stone-900 border border-stone-800 p-4 rounded-xl hover:border-emerald-500/30 transition-colors">
+                 <div className="flex justify-between items-start mb-2">
+                   <div>
+                     <h3 className="font-bold text-stone-200">{session.facility}</h3>
+                     <p className="text-xs text-stone-500">{new Date(session.date).toLocaleDateString(undefined, {weekday: 'long', month: 'short', day: 'numeric'})}</p>
+                   </div>
+                   <span className="text-xs font-mono text-emerald-500 bg-emerald-950/30 px-2 py-1 rounded">
+                     {Math.floor(session.durationMinutes / 60)}h {session.durationMinutes % 60}m
+                   </span>
                  </div>
-                 <span className="text-xs font-mono text-emerald-500 bg-emerald-950/30 px-2 py-1 rounded">
-                   {Math.floor(session.durationMinutes / 60)}h {session.durationMinutes % 60}m
-                 </span>
-               </div>
-               {session.reflection && (
-                 <p className="text-xs text-stone-400 line-clamp-2 italic">"{session.reflection.substring(0, 60)}..."</p>
-               )}
-             </Link>
-           ))}
+                 {firstAnswer && (
+                   <p className="text-xs text-stone-400 line-clamp-2 italic">"{firstAnswer.substring(0, 100)}..."</p>
+                 )}
+               </Link>
+             );
+           })}
            {(!recentSessions || recentSessions.length === 0) && (
              <div className="text-center py-8 text-stone-600 text-sm">No recent history</div>
            )}

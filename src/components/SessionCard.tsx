@@ -50,9 +50,9 @@ export function SessionCard({ session }: SessionCardProps) {
         </div>
       )}
 
-      {session.reflection && (
+      {session.reflectionPrompts && Object.values(session.reflectionPrompts).some(v => v) && (
         <p className="text-sm text-stone-400 line-clamp-2 leading-relaxed italic">
-          "{session.reflection.substring(0, 100)}..."
+          "{Object.values(session.reflectionPrompts).find(v => v)?.substring(0, 100)}..."
         </p>
       )}
       

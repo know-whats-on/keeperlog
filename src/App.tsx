@@ -19,8 +19,10 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   const location = useLocation();
 
   useEffect(() => {
+    const onboardingComplete = localStorage.getItem('keeperlog_onboarding_v1');
     const profile = localStorage.getItem('keeperLog_profile');
-    if (!profile) {
+    
+    if (!onboardingComplete || !profile) {
       navigate('/onboarding', { replace: true });
     }
   }, [navigate, location]);

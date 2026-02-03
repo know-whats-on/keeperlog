@@ -28,8 +28,8 @@ export function Layout() {
         </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto p-4 pb-28">
-        <div className="max-w-md mx-auto">
+      <main className="flex-1 overflow-hidden p-4 pb-24">
+        <div className="max-w-md mx-auto h-full">
           <Outlet />
         </div>
       </main>

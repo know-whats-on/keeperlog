@@ -22,10 +22,10 @@ export function SessionActive() {
   };
 
   return (
-    <div className="flex flex-col min-h-[calc(100vh-100px)] pb-12">
+    <div className="flex flex-col h-[calc(100vh-80px)]">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <button onClick={() => navigate('/')} className="p-2 -ml-2 text-stone-400 hover:text-stone-100">
+      <div className="flex items-center justify-between mb-6 flex-shrink-0">
+        <button onClick={() => navigate('/logs')} className="p-2 -ml-2 text-stone-400 hover:text-stone-100">
           <ChevronLeft className="h-6 w-6" />
         </button>
         <div className="text-center">
@@ -38,7 +38,7 @@ export function SessionActive() {
       </div>
 
       {/* Session Info (Visible for all, but prominent for completed) */}
-      <div className="bg-stone-900/50 border border-stone-800 rounded-xl p-4 mb-6 flex flex-col gap-2">
+      <div className="bg-stone-900/50 border border-stone-800 rounded-xl p-4 mb-6 flex-shrink-0 flex flex-col gap-2">
          <div className="flex justify-between items-center text-xs text-stone-400">
             <span className="flex items-center gap-2"><Clock className="h-3 w-3" /> {format(session.date, 'MMMM d, yyyy')}</span>
             <span>{Math.floor(session.durationMinutes / 60)}h {session.durationMinutes % 60}m</span>
@@ -48,9 +48,14 @@ export function SessionActive() {
              <MapPin className="h-3 w-3" /> {session.area} ({session.role})
            </div>
          )}
-         {isCompleted && session.reflection && (
-           <div className="mt-2 pt-2 border-t border-stone-800">
-             <p className="text-xs text-stone-300 italic line-clamp-3">"{session.reflection.substring(0, 150)}..."</p>
+         {isCompleted && session.reflectionPrompts && (
+           <div className="mt-2 pt-2 border-t border-stone-800 space-y-2">
+             {Object.entries(session.reflectionPrompts).slice(0, 1).map(([prompt, answer]) => (
+               <div key={prompt}>
+                 <p className="text-[10px] text-stone-500 font-semibold mb-0.5">{prompt}</p>
+                 <p className="text-xs text-stone-300 line-clamp-2">{answer || '-'}</p>
+               </div>
+             ))}
            </div>
          )}
       </div>
@@ -79,9 +84,10 @@ export function SessionActive() {
         </div>
       )}
 
-      {/* Timeline */}
-      <div className="flex-1 space-y-4">
-        <div className="flex items-center gap-2 mb-2">
+      {/* Scrollable content area */}
+      <div className="flex-1 overflow-y-auto space-y-4 min-h-0 pb-24">
+        {/* Timeline Header - Sticky */}
+        <div className="flex items-center gap-2 mb-2 sticky top-0 bg-stone-950 py-2 z-10">
            <h2 className="text-xs font-bold text-stone-500 uppercase tracking-widest">Timeline</h2>
            <span className="text-[10px] bg-stone-800 text-stone-400 px-1.5 py-0.5 rounded-full">{captures?.length || 0}</span>
         </div>
@@ -126,6 +132,24 @@ export function SessionActive() {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Reflection Section (Only for Completed Sessions) - Inside scrollable area */}
+        {isCompleted && session.reflectionPrompts && (
+          <div className="space-y-4 mt-8">
+            <div className="flex items-center gap-2 mb-2">
+               <h2 className="text-xs font-bold text-stone-500 uppercase tracking-widest">End of Day Reflection</h2>
+            </div>
+            
+            <div className="space-y-3">
+              {Object.entries(session.reflectionPrompts).map(([prompt, answer]) => (
+                <div key={prompt} className="bg-stone-900 border border-stone-800 rounded-xl p-4">
+                  <p className="text-xs font-semibold text-stone-400 mb-2">{prompt}</p>
+                  <p className="text-sm text-stone-200 leading-relaxed whitespace-pre-line">{answer || '-'}</p>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>

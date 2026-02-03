@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from '../db';
-import { Plus, Trash2, Info, ChevronRight, User, ShieldCheck, HardDrive, Eye, EyeOff, Edit2, X, Check } from 'lucide-react';
+import { Plus, Trash2, Info, ChevronRight, User, ShieldCheck, HardDrive, Eye, EyeOff, Edit2, X, Check, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 import { useNavigate, Link } from 'react-router';
 import { seedCompetencies } from '../lib/competencies';
 import { cn } from '../lib/utils';
+import profileImage from 'figma:asset/b206651a4067f57050f8e5709556b1718b1b3360.png';
 
 export function SettingsPage() {
   const navigate = useNavigate();
@@ -93,8 +94,29 @@ export function SettingsPage() {
     setIsEditingProfile(false);
   };
 
+  const resetOnboarding = () => {
+    if (window.confirm("Reset onboarding? You'll see the welcome flow again next time you open the app.")) {
+      localStorage.removeItem('keeperlog_onboarding_v1');
+      localStorage.removeItem('keeperlog_onboarding_meta');
+      toast.success("Onboarding reset. Refresh the page to see the welcome flow.");
+    }
+  };
+
+  // Get onboarding analytics
+  const getOnboardingMeta = () => {
+    try {
+      const meta = localStorage.getItem('keeperlog_onboarding_meta');
+      if (!meta) return null;
+      return JSON.parse(meta);
+    } catch (e) {
+      return null;
+    }
+  };
+
+  const onboardingMeta = getOnboardingMeta();
+
   return (
-    <div className="space-y-6 pb-20">
+    <div className="space-y-6 pb-24 overflow-y-auto h-full">
       <h1 className="text-xl font-bold text-stone-100">Settings</h1>
       
       {/* Profile Section */}
@@ -139,8 +161,12 @@ export function SettingsPage() {
           </div>
         ) : (
           <div className="flex items-center gap-3">
-             <div className="h-12 w-12 bg-stone-800 rounded-full flex items-center justify-center text-stone-400">
-               <User className="h-6 w-6" />
+             <div className="h-12 w-12 rounded-full border-2 border-stone-700 overflow-hidden">
+               <img 
+                 src={profileImage} 
+                 alt="Profile" 
+                 className="w-full h-full object-cover"
+               />
              </div>
              <div>
                <p className="font-bold text-stone-100">{profile.name || 'Student'}</p>
@@ -148,6 +174,28 @@ export function SettingsPage() {
              </div>
           </div>
         )}
+      </section>
+
+      {/* App & System */}
+      <section className="space-y-3">
+         <h2 className="font-semibold text-stone-500 text-xs uppercase tracking-wide px-1">App & System</h2>
+         
+         <button 
+           onClick={resetOnboarding}
+           className="w-full bg-stone-900 rounded-xl border border-stone-800 p-4 hover:border-emerald-500/30 transition-colors text-left"
+         >
+           <div className="flex items-center justify-between">
+             <div className="flex items-center gap-3">
+                <div className="bg-stone-800 p-2 rounded-lg text-stone-500">
+                  <RotateCcw className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-stone-200 text-sm">Reset Onboarding</h3>
+                  <p className="text-xs text-stone-500">View the welcome flow again</p>
+                </div>
+             </div>
+           </div>
+         </button>
       </section>
 
       {/* Storage & Privacy */}
@@ -268,7 +316,7 @@ export function SettingsPage() {
               Offline-first journal for TAFE NSW animal care students. 
             </p>
             <p className="text-[10px] text-stone-600 mt-2 font-mono">
-              v1.3.0 (Ethics & Competencies)
+              v1.4.0 (Onboarding & Competencies)
             </p>
           </div>
         </div>

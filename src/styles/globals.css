@@ -77,4 +77,16 @@
   input, textarea, select {
     @apply bg-stone-900 border-stone-800 text-stone-100 placeholder:text-stone-600 focus:ring-emerald-500/50 focus:border-emerald-500;
   }
+  
+  /* Respect prefers-reduced-motion for animations */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }
