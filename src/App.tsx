@@ -108,7 +108,8 @@ export default function App() {
     // Register Service Worker for PWA
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
+        // Use the absolute path /sw.js instead of sw.js to ensure it registers at the root scope
+        navigator.serviceWorker.register('/sw.js', { scope: '/' })
           .then(registration => {
             console.log('SW registered: ', registration);
           })

@@ -40,13 +40,10 @@ self.addEventListener('fetch', (event) => {
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request)
-        .catch(() => {
-          return caches.match(OFFLINE_URL)
-            .then((response) => {
-              if (response) return response;
-              // If we don't have the offline page in cache yet (rare if we visited it), try to match the request in cache
-              return caches.match(event.request);
-            });
+        .catch(async () => {
+          const cache = await caches.open(CACHE_NAME);
+          const cachedResponse = await cache.match('/');
+          return cachedResponse || Response.error();
         })
     );
     return;
