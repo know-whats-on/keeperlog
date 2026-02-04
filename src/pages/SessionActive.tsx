@@ -22,7 +22,7 @@ export function SessionActive() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-80px)]">
+    <div className="flex flex-col space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6 flex-shrink-0">
         <button onClick={() => navigate('/logs')} className="p-2 -ml-2 text-stone-400 hover:text-stone-100">
@@ -85,7 +85,7 @@ export function SessionActive() {
       )}
 
       {/* Scrollable content area */}
-      <div className="flex-1 overflow-y-auto space-y-4 min-h-0 pb-24">
+      <div className="space-y-4">
         {/* Timeline Header - Sticky */}
         <div className="flex items-center gap-2 mb-2 sticky top-0 bg-stone-950 py-2 z-10">
            <h2 className="text-xs font-bold text-stone-500 uppercase tracking-widest">Timeline</h2>

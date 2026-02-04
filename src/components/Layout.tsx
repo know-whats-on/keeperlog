@@ -28,13 +28,13 @@ export function Layout() {
         </div>
       </header>
 
-      <main className="flex-1 overflow-hidden p-4 pb-24">
-        <div className="max-w-md mx-auto h-full">
+      <main className="flex-1 overflow-y-auto p-4 pb-12">
+        <div className="max-w-xl mx-auto">
           <Outlet />
         </div>
       </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 bg-stone-900/95 backdrop-blur-md border-t border-stone-800 safe-area-bottom z-50">
+      <nav className="bg-stone-900/95 backdrop-blur-md border-t border-stone-800 safe-area-bottom z-50">
         <div className="max-w-md mx-auto flex justify-around items-center h-20 px-2">
           <NavLink
             to="/"

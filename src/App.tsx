@@ -12,6 +12,7 @@ import { ExportPage } from './pages/Export';
 import { SettingsPage } from './pages/Settings';
 import { MediaManager } from './pages/MediaManager';
 import { PrintView } from './pages/PrintView';
+import { ResetPassword } from './pages/ResetPassword';
 import { seedCompetencies } from './lib/competencies';
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
@@ -34,6 +35,10 @@ const router = createBrowserRouter([
   {
     path: '/onboarding',
     element: <Onboarding />,
+  },
+  {
+    path: '/reset-password',
+    element: <ResetPassword />,
   },
   {
     path: '/',

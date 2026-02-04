@@ -248,7 +248,7 @@ export function ExportPage() {
   };
 
   return (
-    <div className="space-y-6 pb-24 overflow-y-auto h-full">
+    <div className="space-y-6 pb-32">
       <div className="flex items-center justify-between">
          <h1 className="text-xl font-bold text-stone-100">Export & Data</h1>
          <div className="text-right">

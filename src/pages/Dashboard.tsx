@@ -5,9 +5,17 @@ import { Plus, Play, FileText, Camera, Mic, ChevronRight, Clock, MapPin, Downloa
 import { Link, useNavigate } from 'react-router';
 import { startOfWeek, differenceInDays } from 'date-fns';
 import profileImage from 'figma:asset/b206651a4067f57050f8e5709556b1718b1b3360.png';
+import { supabase } from '../lib/supabase';
 
 export function Dashboard() {
   const navigate = useNavigate();
+  const [session, setSession] = useState<any>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+  }, []);
   
   // Check for active session
   const activeSession = useLiveQuery(() => db.sessions.where('status').equals('active').first());
@@ -59,11 +67,14 @@ export function Dashboard() {
   };
 
   return (
-    <div className="space-y-6 pb-20">
+    <div className="space-y-6 pb-8">
       {/* Header */}
       <div className="flex justify-between items-end px-1">
         <div>
-          <p className="text-emerald-500 text-[10px] font-bold uppercase tracking-widest mb-1">KeeperLog</p>
+          <div className="flex items-center gap-2 mb-1">
+            <p className="text-emerald-500 text-[10px] font-bold uppercase tracking-widest">KeeperLog</p>
+            {session && <div className="h-1 w-1 rounded-full bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.8)]" />}
+          </div>
           <h1 className="text-2xl font-bold text-white">Good {timeOfDay}, {profile.name?.split(' ')[0] || 'Keeper'}.</h1>
         </div>
         <button 
