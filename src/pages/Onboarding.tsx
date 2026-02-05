@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { ChevronRight, AlertTriangle, ShieldCheck, Cloud, Lock, CheckCircle2, User } from 'lucide-react';
 import { Toaster, toast } from "sonner@2.0.3";
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
+import { ForestAnimation } from '../components/ForestAnimation';
 import { supabase, serverFetch } from '../lib/supabase';
 
 const QUALIFICATIONS = [
@@ -232,17 +233,22 @@ export function Onboarding() {
 
   return (
     <div className="h-screen bg-stone-950 flex flex-col overflow-hidden text-stone-100">
-      {/* Banner */}
-      <div className="h-[30vh] relative overflow-hidden flex-shrink-0">
-        <ImageWithFallback
-          src={
-            step === 1 ? "https://images.unsplash.com/photo-1663517895302-a7e60bb49cd9?q=80&w=1080" :
-            step === 2 ? "https://images.unsplash.com/photo-1730314737142-2f6bb293f893?q=80&w=1080" :
-            "https://images.unsplash.com/photo-1696013910376-c56f76dd8178?q=80&w=1080"
-          }
-          className="w-full h-full object-cover opacity-40"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-stone-950/40 to-stone-950" />
+      {/* Banner - Extended for step 1 */}
+      <div className={`relative overflow-hidden flex-shrink-0 ${step === 1 ? 'h-[50vh]' : 'h-[30vh]'}`}>
+        {step === 1 ? (
+          <ForestAnimation />
+        ) : (
+          <>
+            <ImageWithFallback
+              src={
+                step === 2 ? "https://images.unsplash.com/photo-1730314737142-2f6bb293f893?q=80&w=1080" :
+                "https://images.unsplash.com/photo-1696013910376-c56f76dd8178?q=80&w=1080"
+              }
+              className="w-full h-full object-cover opacity-40"
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-stone-950/40 to-stone-950" />
+          </>
+        )}
       </div>
 
       <div className="flex-1 px-6 flex flex-col overflow-y-auto">
