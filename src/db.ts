@@ -53,6 +53,7 @@ export interface Competency {
   category: string;
   active?: boolean;   // New: For soft delete/hiding
   order?: number;     // New: For custom sorting
+  confidence?: number; // New: Student self-rating 1-5
 }
 
 // Legacy
@@ -82,8 +83,14 @@ export class KeeperLogDatabase extends Dexie {
     this.version(3).stores({
       sessions: '++id, date, facility, status',
       captures: '++id, sessionId, timestamp, type',
-      competencies: '++id, code, category, active, order', // Added active, order
+      competencies: '++id, code, category, active, order, confidence', // Added active, order, confidence
       logs: '++id, date, facility, activityType'
+    });
+
+    // Handle version change across tabs
+    this.on('versionchange', () => {
+      this.close();
+      // Optionally reload or just stay closed. Usually closing is enough to let the other tab finish the upgrade.
     });
   }
 }

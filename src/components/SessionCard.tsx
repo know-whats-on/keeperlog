@@ -16,7 +16,7 @@ export function SessionCard({ session }: SessionCardProps) {
   };
 
   return (
-    <Link to={`/session/${session.id}`} className="block bg-stone-900 rounded-xl border border-stone-800 p-4 active:border-emerald-500/50 transition-colors mb-3 group hover:border-emerald-500/30">
+    <Link to={`/session/${session.id}`} className="block bg-stone-900 rounded-xl border border-stone-800 p-4 active:border-emerald-500/50 transition-colors group hover:border-emerald-500/30">
       <div className="flex justify-between items-start mb-2">
         <div className="flex flex-col">
           <span className="text-base font-semibold text-stone-200 group-hover:text-emerald-400 transition-colors">{session.facility}</span>

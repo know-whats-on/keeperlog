@@ -1,12 +1,12 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router';
 import { db } from '../db';
-import { ChevronLeft, Save, Camera, Mic, X, Tag, AlertTriangle } from 'lucide-react';
+import { ChevronLeft, Save, Camera, Mic, X, Tag, AlertTriangle, Square } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 import { cn } from '../lib/utils';
 import { compressImage } from '../lib/storage';
 
-const COMMON_TAGS = ["Husbandry", "Feeding", "Behavior", "Medical", "Training", "Enrichment"];
+const COMMON_TAGS = ["Husbandry", "Behaviour", "Medical", "Safety", "Welfare", "Hygiene", "Handling", "Habitat"];
 
 export function SessionCapture() {
   const { id } = useParams();
@@ -19,14 +19,32 @@ export function SessionCapture() {
   const [tags, setTags] = useState<string[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [audioData, setAudioData] = useState<string | null>(null);
+  const [recordingTime, setRecordingTime] = useState(0);
   const [isCompressing, setIsCompressing] = useState(false);
   const [includeInExport, setIncludeInExport] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+        mediaRecorderRef.current.stop();
+      }
+    };
+  }, []);
 
   const handleSave = async () => {
     if (!content && !image && !audioData && typeParam !== 'voice') {
       toast.error("Please add some content");
+      return;
+    }
+
+    if (isRecording) {
+      toast.error("Please stop recording first");
       return;
     }
 
@@ -46,6 +64,77 @@ export function SessionCapture() {
       console.error(err);
       toast.error("Failed to save");
     }
+  };
+
+  const startRecording = async () => {
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error("Browser does not support audio recording");
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const reader = new FileReader();
+        reader.readAsDataURL(audioBlob);
+        reader.onloadend = () => {
+          setAudioData(reader.result as string);
+        };
+        // Stop all tracks to release the microphone
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+      setRecordingTime(0);
+      timerRef.current = setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+    } catch (err: any) {
+      console.error("Microphone access error:", err);
+      setIsRecording(false);
+      
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        toast.error("Microphone blocked. Please click the lock icon in your browser's address bar and set Microphone to 'Allow'.");
+      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+        toast.error("No microphone found. Please connect a recording device.");
+      } else {
+        toast.error("Could not start recording: " + err.message);
+      }
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      if (timerRef.current) clearInterval(timerRef.current);
+      toast.success("Voice note captured");
+    }
+  };
+
+  const toggleRecording = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -73,18 +162,8 @@ export function SessionCapture() {
     setTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
   };
 
-  const toggleRecording = () => {
-    if (isRecording) {
-      setIsRecording(false);
-      setAudioData("data:audio/webm;base64,MOCK_AUDIO_DATA");
-      toast.success("Voice note saved");
-    } else {
-      setIsRecording(true);
-    }
-  };
-
   return (
-    <div className="flex flex-col h-full">
+    <div className="max-w-md mx-auto p-4 flex flex-col h-full">
       <div className="flex items-center gap-2 mb-6 flex-shrink-0">
         <button onClick={() => navigate(-1)} className="p-3 -ml-3 text-stone-400 hover:text-stone-100 rounded-full hover:bg-stone-800 transition-colors">
           <ChevronLeft className="h-6 w-6" />
@@ -167,18 +246,39 @@ export function SessionCapture() {
 
           {typeParam === 'voice' && (
             <div className="flex flex-col items-center justify-center py-12 bg-stone-900 rounded-2xl border border-stone-800">
-               <button
-                 onClick={toggleRecording}
-                 className={cn(
-                   "h-24 w-24 rounded-full flex items-center justify-center transition-all",
-                   isRecording ? "bg-red-900/20 animate-pulse border-4 border-red-500" : "bg-emerald-900/20 border-4 border-emerald-500/30 hover:bg-emerald-900/40"
+               <div className="relative mb-6">
+                 {isRecording && (
+                    <div className="absolute -inset-4 bg-red-500/20 rounded-full animate-ping" />
                  )}
-               >
-                 <Mic className={cn("h-10 w-10", isRecording ? "text-red-500" : "text-emerald-500")} />
-               </button>
-               <p className="mt-4 text-stone-400 text-sm font-medium">
-                 {isRecording ? "Recording... Tap to stop" : audioData ? "Recording saved" : "Tap to record"}
-               </p>
+                 <button
+                   onClick={toggleRecording}
+                   className={cn(
+                     "h-24 w-24 rounded-full flex items-center justify-center transition-all relative z-10",
+                     isRecording ? "bg-red-600 border-4 border-red-400" : "bg-emerald-900/20 border-4 border-emerald-500/30 hover:bg-emerald-900/40"
+                   )}
+                 >
+                   {isRecording ? (
+                     <Square className="h-8 w-8 text-white fill-white" />
+                   ) : (
+                     <Mic className="h-10 w-10 text-emerald-500" />
+                   )}
+                 </button>
+               </div>
+               
+               <div className="text-center">
+                 <p className={cn("text-xl font-mono font-bold mb-1", isRecording ? "text-red-500" : "text-stone-300")}>
+                   {isRecording ? formatTime(recordingTime) : audioData ? "Recording Saved" : "0:00"}
+                 </p>
+                 <p className="text-stone-500 text-xs font-medium uppercase tracking-widest">
+                   {isRecording ? "Recording Now" : audioData ? "Tap to record again" : "Tap to start recording"}
+                 </p>
+               </div>
+
+               {audioData && !isRecording && (
+                 <div className="mt-6 w-full px-8">
+                    <audio src={audioData} controls className="w-full h-8 accent-emerald-500" />
+                 </div>
+               )}
             </div>
           )}
 
@@ -225,7 +325,7 @@ export function SessionCapture() {
       <div className="flex-shrink-0 pt-6 pb-2 bg-stone-950">
         <button 
           onClick={handleSave}
-          disabled={isCompressing}
+          disabled={isCompressing || isRecording}
           className="w-full bg-emerald-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-emerald-900/20 hover:bg-emerald-500 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Save className="h-5 w-5" /> {isCompressing ? 'Processing...' : 'Save Capture'}

@@ -28,10 +28,8 @@ export function Layout() {
         </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto p-4 pb-12">
-        <div className="max-w-xl mx-auto">
-          <Outlet />
-        </div>
+      <main className="flex-1 overflow-y-auto">
+        <Outlet />
       </main>
 
       <nav className="bg-stone-900/95 backdrop-blur-md border-t border-stone-800 safe-area-bottom z-50">

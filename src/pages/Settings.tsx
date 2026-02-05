@@ -181,7 +181,7 @@ export function SettingsPage() {
   };
 
   return (
-    <div className="max-w-xl mx-auto space-y-8 pb-32 px-1">
+    <div className="max-w-md mx-auto p-4 space-y-8 pb-32">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-stone-100">Settings</h1>
         <div className="px-2 py-1 bg-stone-900 rounded border border-stone-800 text-[10px] font-mono text-stone-500">v1.5.0 Robust Sync</div>

@@ -47,7 +47,7 @@ export function SessionStart() {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="max-w-md mx-auto p-4 flex flex-col h-full">
       <div className="flex items-center gap-2 mb-6 flex-shrink-0">
         <button onClick={() => navigate(-1)} className="p-3 -ml-3 text-stone-400 hover:text-stone-100 rounded-full hover:bg-stone-800 transition-colors">
           <ChevronLeft className="h-6 w-6" />

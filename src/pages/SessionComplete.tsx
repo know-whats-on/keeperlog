@@ -75,7 +75,7 @@ export function SessionComplete() {
     const timer = setTimeout(async () => {
       setSaveStatus('saving');
       try {
-        const reflectionText = activePrompts.map(p => `**${p}**\\n${answers[p] || '-'}`).join('\\n\\n');
+        const reflectionText = activePrompts.map(p => `**${p}**\n${answers[p] || '-'}`).join('\n\n');
         
         await db.sessions.update(sessionId, {
           durationMinutes: duration,
@@ -102,7 +102,7 @@ export function SessionComplete() {
     setLoading(true);
     try {
       // Ensure final save happens
-      const reflectionText = activePrompts.map(p => `**${p}**\\n${answers[p] || '-'}`).join('\\n\\n');
+      const reflectionText = activePrompts.map(p => `**${p}**\n${answers[p] || '-'}`).join('\n\n');
 
       await db.sessions.update(sessionId, {
         endTime: new Date(), 
@@ -127,7 +127,7 @@ export function SessionComplete() {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="max-w-md mx-auto p-4 flex flex-col h-full">
       <div className="flex items-center justify-between mb-6 flex-shrink-0">
         <div className="flex items-center gap-2">
           <button onClick={() => navigate(-1)} className="p-3 -ml-3 text-stone-400 hover:text-stone-100 rounded-full hover:bg-stone-800 transition-colors">

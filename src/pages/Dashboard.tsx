@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useLiveQuery } from "dexie-react-hooks";
 import { db, Session } from '../db';
 import { Plus, Play, FileText, Camera, Mic, ChevronRight, Clock, MapPin, Download, AlertCircle } from 'lucide-react';
+import { SkillProgressCard } from '../components/SkillProgressCard';
 import { Link, useNavigate } from 'react-router';
 import { startOfWeek, differenceInDays } from 'date-fns';
 import profileImage from 'figma:asset/b206651a4067f57050f8e5709556b1718b1b3360.png';
@@ -21,10 +22,10 @@ export function Dashboard() {
   const activeSession = useLiveQuery(() => db.sessions.where('status').equals('active').first());
   
   // Recent sessions
-  const recentSessions = useLiveQuery(() => db.sessions.where('status').equals('completed').reverse().limit(3).toArray());
+  const recentSessions = useLiveQuery(() => db.sessions.reverse().limit(3).toArray());
   
   // Export Reminder Logic
-  const allSessionsCount = useLiveQuery(() => db.sessions.where('status').equals('completed').count());
+  const allSessionsCount = useLiveQuery(() => db.sessions.count());
   const [showExportReminder, setShowExportReminder] = useState(false);
 
   useEffect(() => {
@@ -67,7 +68,7 @@ export function Dashboard() {
   };
 
   return (
-    <div className="space-y-6 pb-8">
+    <div className="max-w-md mx-auto p-4 pb-12 space-y-6">
       {/* Header */}
       <div className="flex justify-between items-end px-1">
         <div>
@@ -162,6 +163,9 @@ export function Dashboard() {
           </div>
         </div>
       )}
+
+      {/* Skill Tracker Card */}
+      <SkillProgressCard />
 
       {/* Stats Row */}
       <div className="grid grid-cols-2 gap-4">

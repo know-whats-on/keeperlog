@@ -13,6 +13,7 @@ import { SettingsPage } from './pages/Settings';
 import { MediaManager } from './pages/MediaManager';
 import { PrintView } from './pages/PrintView';
 import { ResetPassword } from './pages/ResetPassword';
+import { Skills } from './pages/Skills';
 import { seedCompetencies } from './lib/competencies';
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
@@ -88,6 +89,10 @@ const router = createBrowserRouter([
       {
         path: 'settings/storage',
         element: <MediaManager />,
+      },
+      {
+        path: 'skills',
+        element: <Skills />,
       },
       {
         path: '*',

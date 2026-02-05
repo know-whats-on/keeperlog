@@ -1,9 +1,12 @@
 import React from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
 import { useLiveQuery } from "dexie-react-hooks";
-import { db } from '../db';
-import { ChevronLeft, FileText, Camera, Mic, Clock, CheckCircle2, MapPin } from 'lucide-react';
+import { db, Capture } from '../db';
+import { ChevronLeft, FileText, Camera, Mic, Clock, CheckCircle2, MapPin, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
+import { motion, AnimatePresence } from 'motion/react';
+import { toast } from 'sonner@2.0.3';
+import { SwipeableItem } from '../components/SwipeableItem';
 
 export function SessionActive() {
   const { id } = useParams();
@@ -11,7 +14,32 @@ export function SessionActive() {
   const sessionId = Number(id);
 
   const session = useLiveQuery(() => db.sessions.get(sessionId));
-  const captures = useLiveQuery(() => db.captures.where('sessionId').equals(sessionId).reverse().toArray());
+  const captures = useLiveQuery(async () => {
+    const data = await db.captures.where('sessionId').equals(sessionId).toArray();
+    // Sort by timestamp descending (newest first) to match reverse ID behavior but persist across restores
+    return data.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+  });
+
+  const handleDeleteCapture = async (capture: Capture) => {
+    if (!capture.id) return;
+    
+    try {
+      await db.captures.delete(capture.id);
+      toast.success("Capture deleted", {
+        action: {
+          label: "Undo",
+          onClick: async () => {
+            const { id, ...capData } = capture;
+            await db.captures.add(capData);
+            toast.success("Capture restored");
+          }
+        }
+      });
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to delete capture");
+    }
+  };
 
   if (!session) return <div className="p-8 text-center text-stone-500">Loading session...</div>;
 
@@ -22,7 +50,7 @@ export function SessionActive() {
   };
 
   return (
-    <div className="flex flex-col space-y-6">
+    <div className="max-w-md mx-auto p-4 flex flex-col space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6 flex-shrink-0">
         <button onClick={() => navigate('/logs')} className="p-2 -ml-2 text-stone-400 hover:text-stone-100">
@@ -97,41 +125,48 @@ export function SessionActive() {
             <p className="text-stone-500 text-sm">No captures recorded.</p>
           </div>
         ) : (
-          <div className="relative border-l border-stone-800 ml-4 space-y-6 pb-6">
-            {captures.map(cap => (
-              <div key={cap.id} className="relative pl-6">
-                {/* Dot */}
-                <div className="absolute -left-1.5 top-1 h-3 w-3 rounded-full bg-stone-900 border border-stone-700"></div>
-                
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xs font-mono text-stone-500">
-                    {cap.timestamp.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                  </span>
-                  <span className="text-[10px] px-1.5 py-0.5 bg-stone-800 text-stone-300 rounded uppercase font-bold tracking-wide">
-                    {cap.type}
-                  </span>
-                </div>
-                
-                <div className="bg-stone-900 border border-stone-800 rounded-lg p-3">
-                  {cap.content && <p className="text-sm text-stone-300 mb-2 whitespace-pre-wrap">{cap.content}</p>}
-                  {cap.mediaUrl && cap.type === 'photo' && (
-                    <img src={cap.mediaUrl} alt="Capture" className="rounded-lg max-h-48 object-cover border border-stone-800" />
-                  )}
-                  {cap.type === 'voice' && (
-                     <div className="flex items-center gap-2 text-stone-500 text-xs italic bg-stone-950 p-2 rounded border border-stone-800/50">
-                       <Mic className="h-3 w-3" /> Voice note (stored locally)
-                     </div>
-                  )}
-                  {cap.tags && cap.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {cap.tags.map(tag => (
-                        <span key={tag} className="text-[10px] text-emerald-500 bg-emerald-950/30 px-1.5 rounded">#{tag}</span>
-                      ))}
+          <div className="relative border-l border-stone-800 ml-4 space-y-6 pb-6 pt-2">
+            <AnimatePresence initial={false}>
+              {captures.map(cap => (
+                <div key={cap.id} className="relative pl-6 group/item">
+                  {/* Dot - Outside swipeable area */}
+                  <div className="absolute -left-1.5 top-1 h-3 w-3 rounded-full bg-stone-900 border border-stone-700 group-hover/item:border-emerald-500/50 transition-colors z-20"></div>
+                  
+                  <SwipeableItem onDelete={() => handleDeleteCapture(cap)}>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs font-mono text-stone-500">
+                        {cap.timestamp.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                      </span>
+                      <span className="text-[10px] px-1.5 py-0.5 bg-stone-800 text-stone-300 rounded uppercase font-bold tracking-wide">
+                        {cap.type}
+                      </span>
                     </div>
-                  )}
+                    
+                    <div className="bg-stone-900 border border-stone-800 rounded-lg p-3 group-hover/item:border-stone-700 transition-colors shadow-sm">
+                      {cap.content && <p className="text-sm text-stone-300 mb-2 whitespace-pre-wrap">{cap.content}</p>}
+                      {cap.mediaUrl && cap.type === 'photo' && (
+                        <img src={cap.mediaUrl} alt="Capture" className="rounded-lg max-h-48 w-full object-cover border border-stone-800" />
+                      )}
+                      {cap.mediaUrl && cap.type === 'voice' && (
+                        <div className="bg-stone-950 p-3 rounded-lg border border-stone-800/50 mt-1">
+                          <audio src={cap.mediaUrl} controls className="w-full h-8 accent-emerald-500" />
+                          <div className="flex items-center gap-2 mt-2 text-[10px] text-stone-500 italic">
+                            <Mic className="h-3 w-3" /> Voice recording
+                          </div>
+                        </div>
+                      )}
+                      {cap.tags && cap.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {cap.tags.map(tag => (
+                            <span key={tag} className="text-[10px] text-emerald-500 bg-emerald-950/30 px-1.5 rounded">#{tag}</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </SwipeableItem>
                 </div>
-              </div>
-            ))}
+              ))}
+            </AnimatePresence>
           </div>
         )}
 
