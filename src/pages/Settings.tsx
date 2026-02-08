@@ -15,6 +15,16 @@ import { supabase, serverFetch } from '../lib/supabase';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
 import { createDataBundle, restoreDataBundle, downloadBundle } from '../lib/data-exchange';
 import profileImage from 'figma:asset/b206651a4067f57050f8e5709556b1718b1b3360.png';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '../components/ui/alert-dialog';
 
 export function SettingsPage() {
   const navigate = useNavigate();
@@ -28,6 +38,11 @@ export function SettingsPage() {
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [editName, setEditName] = useState('');
   const [editQual, setEditQual] = useState('');
+  
+  // Import Dialog States
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [importSuccess, setImportSuccess] = useState(false);
+  const [importDetails, setImportDetails] = useState({ hours: '0', sessions: 0 });
   
   // Competency States
   const [newCode, setNewCode] = useState('');
@@ -113,11 +128,26 @@ export function SettingsPage() {
         const bundle = JSON.parse(event.target?.result as string);
         if (window.confirm("Import backup file? This will replace all current data.")) {
           await restoreDataBundle(bundle);
-          toast.success("Import successful! Refreshing...");
-          setTimeout(() => window.location.reload(), 1000);
+          
+          // Calculate total hours from imported sessions
+          const totalMinutes = (bundle.sessions || []).reduce((sum: number, session: any) => {
+            return sum + (session.durationMinutes || 0);
+          }, 0);
+          const totalHours = (totalMinutes / 60).toFixed(1);
+          
+          // Show success dialog
+          setImportSuccess(true);
+          setImportDetails({
+            hours: totalHours,
+            sessions: bundle.sessions?.length || 0
+          });
+          setImportDialogOpen(true);
         }
       } catch (err) {
-        toast.error("Invalid backup file format");
+        console.error("Import error:", err);
+        // Show failure dialog
+        setImportSuccess(false);
+        setImportDialogOpen(true);
       }
     };
     reader.readAsText(file);
@@ -421,6 +451,66 @@ export function SettingsPage() {
           </div>
         </div>
       </section>
+
+      {/* Import Dialog */}
+      <AlertDialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
+        <AlertDialogContent className="bg-stone-900 border-stone-800">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-stone-100">
+              {importSuccess ? (
+                <><CheckCircle2 className="h-5 w-5 text-emerald-500" /> Import Successful</>
+              ) : (
+                <><AlertCircle className="h-5 w-5 text-red-500" /> Import Failed</>
+              )}
+            </AlertDialogTitle>
+            {importSuccess ? (
+              <>
+                <AlertDialogDescription className="text-stone-400">
+                  Successfully imported {importDetails.sessions} session(s) totaling {importDetails.hours} hours.
+                </AlertDialogDescription>
+                <AlertDialogDescription className="text-stone-500 text-xs">
+                  All data has been restored to your local database.
+                </AlertDialogDescription>
+              </>
+            ) : (
+              <AlertDialogDescription className="text-stone-400">
+                Failed to import the backup file. Please ensure the file is valid JSON format and try again.
+              </AlertDialogDescription>
+            )}
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+            {importSuccess ? (
+              <>
+                <AlertDialogAction 
+                  onClick={() => {
+                    setImportDialogOpen(false);
+                    navigate('/logs');
+                  }}
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white"
+                >
+                  View Imported Log(s)
+                </AlertDialogAction>
+                <AlertDialogCancel 
+                  onClick={() => {
+                    setImportDialogOpen(false);
+                    navigate('/');
+                  }}
+                  className="bg-stone-800 hover:bg-stone-700 text-stone-200 border-stone-700"
+                >
+                  Done
+                </AlertDialogCancel>
+              </>
+            ) : (
+              <AlertDialogAction 
+                onClick={() => setImportDialogOpen(false)}
+                className="bg-stone-800 hover:bg-stone-700 text-stone-200"
+              >
+                Close
+              </AlertDialogAction>
+            )}
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -1,17 +1,21 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
 import { useLiveQuery } from "dexie-react-hooks";
 import { db, Capture } from '../db';
-import { ChevronLeft, FileText, Camera, Mic, Clock, CheckCircle2, MapPin, Trash2 } from 'lucide-react';
+import { ChevronLeft, FileText, Camera, Mic, Clock, CheckCircle2, MapPin, Trash2, Download, Images } from 'lucide-react';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner@2.0.3';
 import { SwipeableItem } from '../components/SwipeableItem';
+import { PhotoLightbox } from '../components/PhotoLightbox';
 
 export function SessionActive() {
   const { id } = useParams();
   const navigate = useNavigate();
   const sessionId = Number(id);
+
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxImage, setLightboxImage] = useState('');
 
   const session = useLiveQuery(() => db.sessions.get(sessionId));
   const captures = useLiveQuery(async () => {
@@ -39,6 +43,36 @@ export function SessionActive() {
       console.error(err);
       toast.error("Failed to delete capture");
     }
+  };
+
+  const handleBulkDownloadPhotos = async () => {
+    if (!captures) return;
+    
+    const photoCaptures = captures.filter(c => c.type === 'photo' && c.mediaUrl);
+    
+    if (photoCaptures.length === 0) {
+      toast.error("No photos to download");
+      return;
+    }
+
+    // Download each photo
+    photoCaptures.forEach((capture, index) => {
+      setTimeout(() => {
+        const link = document.createElement('a');
+        link.href = capture.mediaUrl!;
+        link.download = `${session?.facility}_photo_${index + 1}_${Date.now()}.jpg`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }, index * 200); // Stagger downloads to avoid browser blocking
+    });
+
+    toast.success(`Downloading ${photoCaptures.length} photo(s)`);
+  };
+
+  const openLightbox = (imageUrl: string) => {
+    setLightboxImage(imageUrl);
+    setLightboxOpen(true);
   };
 
   if (!session) return <div className="p-8 text-center text-stone-500">Loading session...</div>;
@@ -115,9 +149,20 @@ export function SessionActive() {
       {/* Scrollable content area */}
       <div className="space-y-4">
         {/* Timeline Header - Sticky */}
-        <div className="flex items-center gap-2 mb-2 sticky top-0 bg-stone-950 py-2 z-10">
-           <h2 className="text-xs font-bold text-stone-500 uppercase tracking-widest">Timeline</h2>
-           <span className="text-[10px] bg-stone-800 text-stone-400 px-1.5 py-0.5 rounded-full">{captures?.length || 0}</span>
+        <div className="flex items-center justify-between mb-2 sticky top-0 bg-stone-950 py-2 z-10">
+          <div className="flex items-center gap-2">
+            <h2 className="text-xs font-bold text-stone-500 uppercase tracking-widest">Timeline</h2>
+            <span className="text-[10px] bg-stone-800 text-stone-400 px-1.5 py-0.5 rounded-full">{captures?.length || 0}</span>
+          </div>
+          {captures && captures.filter(c => c.type === 'photo' && c.mediaUrl).length > 0 && (
+            <button 
+              onClick={handleBulkDownloadPhotos}
+              className="flex items-center gap-1.5 text-[10px] bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1.5 rounded-lg font-bold uppercase tracking-wider transition-colors"
+            >
+              <Images className="h-3 w-3" />
+              Download All Photos
+            </button>
+          )}
         </div>
 
         {!captures || captures.length === 0 ? (
@@ -145,7 +190,7 @@ export function SessionActive() {
                     <div className="bg-stone-900 border border-stone-800 rounded-lg p-3 group-hover/item:border-stone-700 transition-colors shadow-sm">
                       {cap.content && <p className="text-sm text-stone-300 mb-2 whitespace-pre-wrap">{cap.content}</p>}
                       {cap.mediaUrl && cap.type === 'photo' && (
-                        <img src={cap.mediaUrl} alt="Capture" className="rounded-lg max-h-48 w-full object-cover border border-stone-800" />
+                        <img src={cap.mediaUrl} alt="Capture" className="rounded-lg max-h-48 w-full object-cover border border-stone-800 cursor-pointer" onClick={() => openLightbox(cap.mediaUrl!)} />
                       )}
                       {cap.mediaUrl && cap.type === 'voice' && (
                         <div className="bg-stone-950 p-3 rounded-lg border border-stone-800/50 mt-1">
@@ -200,6 +245,13 @@ export function SessionActive() {
           </button>
         </div>
       )}
+
+      {/* Photo Lightbox */}
+      <PhotoLightbox 
+        isOpen={lightboxOpen}
+        imageUrl={lightboxImage}
+        onClose={() => setLightboxOpen(false)}
+      />
     </div>
   );
 }

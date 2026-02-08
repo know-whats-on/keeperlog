@@ -5,6 +5,7 @@ import { Download, FileJson, FileText, Trash2, Printer, AlertTriangle, Upload } 
 import { toast } from 'sonner@2.0.3';
 import { format, parse } from 'date-fns';
 import { Link } from 'react-router';
+import { createDataBundle, downloadBundle } from '../lib/data-exchange';
 
 export function ExportPage() {
   const sessions = useLiveQuery(() => db.sessions.toArray());
@@ -19,18 +20,15 @@ export function ExportPage() {
     localStorage.setItem('keeperLog_lastExportCount', completedSessionsCount.toString());
   };
 
-  const downloadJSON = () => {
-    if (!sessions) return;
-    const exportData = { sessions, captures };
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
-    const downloadAnchorNode = document.createElement('a');
-    downloadAnchorNode.setAttribute("href", dataStr);
-    downloadAnchorNode.setAttribute("download", `keeperlog_backup_${format(new Date(), 'yyyy-MM-dd')}.json`);
-    document.body.appendChild(downloadAnchorNode);
-    downloadAnchorNode.click();
-    downloadAnchorNode.remove();
-    updateExportStatus();
-    toast.success("JSON export started");
+  const downloadJSON = async () => {
+    try {
+      const bundle = await createDataBundle();
+      downloadBundle(bundle);
+      updateExportStatus();
+      toast.success("Backup file downloaded");
+    } catch (e) {
+      toast.error("Export failed");
+    }
   };
 
   const downloadCSV = () => {
