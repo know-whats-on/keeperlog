@@ -3775,6 +3775,12 @@
     }
   }
 
+  @media (hover: hover) {
+    .hover\:opacity-90:hover {
+      opacity: .9;
+    }
+  }
+
   .focus\:border-emerald-500:focus {
     border-color: var(--color-emerald-500);
   }

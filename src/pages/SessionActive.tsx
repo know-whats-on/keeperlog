@@ -190,7 +190,12 @@ export function SessionActive() {
                     <div className="bg-stone-900 border border-stone-800 rounded-lg p-3 group-hover/item:border-stone-700 transition-colors shadow-sm">
                       {cap.content && <p className="text-sm text-stone-300 mb-2 whitespace-pre-wrap">{cap.content}</p>}
                       {cap.mediaUrl && cap.type === 'photo' && (
-                        <img src={cap.mediaUrl} alt="Capture" className="rounded-lg max-h-48 w-full object-cover border border-stone-800 cursor-pointer" onClick={() => openLightbox(cap.mediaUrl!)} />
+                        <img 
+                          src={cap.mediaUrl} 
+                          alt="Capture" 
+                          className="rounded-lg max-h-48 w-full object-cover border border-stone-800 cursor-pointer hover:opacity-90 transition-opacity" 
+                          onClick={() => openLightbox(cap.mediaUrl!)}
+                        />
                       )}
                       {cap.mediaUrl && cap.type === 'voice' && (
                         <div className="bg-stone-950 p-3 rounded-lg border border-stone-800/50 mt-1">

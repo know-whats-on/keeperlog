@@ -52,6 +52,14 @@ export function Dashboard() {
     return { count, minutes };
   });
 
+  // Total stats (all time)
+  const totalStats = useLiveQuery(async () => {
+    const entries = await db.sessions.toArray();
+    const count = entries.length;
+    const minutes = entries.reduce((sum, s) => sum + (s.durationMinutes || 0), 0);
+    return { count, minutes };
+  });
+  
   const timeOfDay = new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 18 ? 'Afternoon' : 'Evening';
   const profile = JSON.parse(localStorage.getItem('keeperLog_profile') || '{}');
 
@@ -179,7 +187,7 @@ export function Dashboard() {
         <div className="bg-stone-900 border border-stone-800 p-4 rounded-xl">
           <p className="text-[10px] text-stone-500 uppercase tracking-wide font-bold mb-1">Hours Logged</p>
           <div className="flex items-end gap-2">
-             <span className="text-2xl font-bold text-emerald-500">{formatDuration(weeklyStats?.minutes || 0)}</span>
+             <span className="text-2xl font-bold text-emerald-500">{formatDuration(totalStats?.minutes || 0)}</span>
           </div>
         </div>
       </div>
